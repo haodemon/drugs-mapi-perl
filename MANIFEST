@@ -1,0 +1,6 @@
+Changes
+Makefile.PL
+MANIFEST
+README
+t/Drugs-Mapi.t
+lib/Drugs/Mapi.pm
