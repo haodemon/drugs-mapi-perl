@@ -39,9 +39,6 @@ sub _build__mapi {
 	return $ua;
 }
 
-no warnings 'once';
-*autocomplete = \&get_drugs;
-
 =item get_drugs
 
  Takes a string ($drug) as an argument and returns drugs matched (think autocompletion)
@@ -160,6 +157,10 @@ sub _form_url {
 	return $opts{url};
 }
 
+
+no warnings 'once';
+*autocomplete = \&get_drugs;
+
 1;
 
 __END__
@@ -172,11 +173,11 @@ Drugs::Mapi - Perl client module to work with 'http://mapi-us.iterar.co/' drugs 
 
   use Drugs::Mapi;
 
-	my $drugs = Drugs::Mapi->new();
+  my $drugs = Drugs::Mapi->new();
 
-	$drugs->get_drugs('Ibuprofen')        # [ 'Ibuprofen', 'Ibuprofen and diphenhydramine citrate', <...> ]
-	$drugs->get_dosages('Aspirin')        # [ '25MG', '200MG', '325MG' ]
-	$drugs->get_ingredients('Propecia');  # [ 'Finasteride' ]
+  $drugs->get_drugs('Ibuprofen')        # [ 'Ibuprofen', 'Ibuprofen and diphenhydramine citrate', <...> ]
+  $drugs->get_dosages('Aspirin')        # [ '25MG', '200MG', '325MG' ]
+  $drugs->get_ingredients('Propecia');  # [ 'Finasteride' ]
 
 
 =head1 DESCRIPTION
