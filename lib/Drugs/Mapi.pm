@@ -1,6 +1,6 @@
 package Drugs::Mapi;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 use strict;
 use warnings;
@@ -9,12 +9,12 @@ use Moose;
 use Memoize;
 
 use JSON;
-use Try::Tiny;
 use LWP::UserAgent;
 use URI::Escape;
 
 has 'api_base_url' => (is => 'ro', default => 'https://mapi-us.iterar.co/api');
 has 'api_key'      => (is => 'ro', isa => 'Str');
+has 'attempts'     => (is => 'rw', default => 3);
 
 has '_mapi'        => (is => 'rw', isa => 'LWP::UserAgent', lazy_build => 1);
 has '_memoize'     => (is => 'ro', default => 1);
@@ -104,30 +104,38 @@ sub get_ingredients {
 
 =item _get
 
- Fires GET request to Google and saves pageToken for pagination
+ Fires GET request to the API
 
 =cut
 
 sub _get {
 	my ($self, $url) = @_;
 
-	my $ua = $self->_mapi;
-	my $tries = 3;
-	my $res;
+	my $ua    = $self->_mapi;
+	my $tries = $self->attempts;
+	my $error;
 
-	while ($tries-- and not $res) {
+	while($tries--) {
 		my $response = $ua->get($url =~ s|^https://|http://|gr);  # https is not supported
 		my $content  = $response->decoded_content();
 
-		try {
-			$res = JSON->new()->utf8(1)->decode($content);
+		if (!$response->is_success) {
+			$error = $content;
+			warn("Unsuccessful request to Mapi API: ($tries attempts left): $content");
+			next;
 		}
-		catch {
-			warn("Failed to decode content from Mapi ($tries attempts left): $_");
+
+		my $data = eval {
+			JSON->new()->utf8(1)->decode($content);
 		};
+
+		next if $error = $@;
+		next if $error = $data->{error};
+
+		return $data;
 	}
 
-	return $res;
+	die "No attempts left while querying Mapi API: $error";
 }
 
 =item _form_url()
